@@ -7,72 +7,77 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
-    --navy: #1F3864;
-    --teal: #17A589;
-    --blue: #2E75B6;
-    --green-l: #D5F5E3;
-    --green-d: #1E8449;
-    --red-l: #FADBD8;
-    --red-d: #A32D2D;
-    --orange-l: #FDEBD0;
-    --orange-d: #854F0B;
-    --gray-l: #F5F5F5;
-    --gray-d: #888;
-    --yellow: #FFF9C4;
-    --white: #fff;
-    --border: #e0e0e0;
-    --text: #1a1a1a;
-    --text-muted: #666;
+    --navy: #1F3864; --teal: #17A589; --blue: #2E75B6;
+    --green-l: #D5F5E3; --green-d: #1E8449;
+    --red-l: #FADBD8; --red-d: #A32D2D;
+    --orange-l: #FDEBD0; --orange-d: #854F0B;
+    --gray-l: #F5F5F5; --gray-d: #888;
+    --yellow: #FFF9C4; --white: #fff;
+    --border: #e0e0e0; --text: #1a1a1a; --text-muted: #666;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fa; color: var(--text); min-height: 100vh; }
 
-  /* Header */
   .header { background: var(--navy); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 56px; }
   .header-logo { color: white; font-size: 18px; font-weight: 700; letter-spacing: .5px; }
   .header-logo span { color: var(--teal); }
   .header-sub { color: rgba(255,255,255,.5); font-size: 12px; }
 
-  /* Tabs */
-  .tabs { background: white; border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; gap: 0; }
+  .tabs { background: white; border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; }
   .tab { padding: 14px 20px; font-size: 14px; cursor: pointer; border: none; background: none; color: var(--text-muted); border-bottom: 2px solid transparent; transition: all .15s; font-weight: 500; }
   .tab.active { color: var(--navy); border-bottom-color: var(--navy); }
 
-  /* Contenido */
-  .content { max-width: 1200px; margin: 0 auto; padding: 1.5rem 2rem; }
+  .content { max-width: 1280px; margin: 0 auto; padding: 1.5rem 2rem; }
   .panel { display: none; }
   .panel.active { display: block; }
 
-  /* Tabla */
+  /* FILTROS */
+  .filters-bar { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; }
+  .filter-group label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+  .filter-group select, .filter-group input { font-size: 13px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; background: white; color: var(--text); font-family: inherit; min-width: 130px; }
+  .filter-group select:focus, .filter-group input:focus { outline: none; border-color: var(--teal); }
+  .btn-reset { font-size: 12px; padding: 7px 14px; border: 1px solid var(--border); border-radius: 8px; background: white; color: var(--text-muted); cursor: pointer; font-family: inherit; align-self: flex-end; transition: all .15s; }
+  .btn-reset:hover { background: var(--gray-l); color: var(--text); }
+  .filter-count { font-size: 12px; color: var(--text-muted); align-self: flex-end; padding-bottom: 8px; margin-left: auto; }
+
+  /* TABLA */
   .table-card { background: white; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
   .table-toolbar { padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
   .table-title { font-size: 15px; font-weight: 600; color: var(--navy); }
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   thead th { background: var(--gray-l); padding: 10px 14px; text-align: left; font-weight: 600; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  thead th.sortable { cursor: pointer; user-select: none; }
+  thead th.sortable:hover { color: var(--navy); }
   tbody tr { border-bottom: 1px solid var(--border); transition: filter .1s; }
   tbody tr:last-child { border-bottom: none; }
   tbody td { padding: 10px 14px; vertical-align: middle; }
   tbody tr:hover { filter: brightness(.97); }
   tbody tr.empty-state td { text-align: center; padding: 3rem; color: var(--text-muted); font-size: 14px; }
 
-  /* Colores por tipo */
   tr.tipo-ingreso-comision { background: var(--green-l); }
   tr.tipo-ingreso-servicio { background: var(--green-l); }
   tr.tipo-gasto { background: var(--red-l); }
   tr.tipo-financiacion { background: var(--orange-l); }
 
-  /* Badge tipo */
-  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
-  .badge-com { background: #c0dd97; color: #27500a; }
-  .badge-serv { background: #c0dd97; color: #27500a; }
-  .badge-gasto { background: #f7c1c1; color: #791f1f; }
-  .badge-fin { background: #fac775; color: #633806; }
-
-  /* Select tipo en tabla */
   select.tipo-sel { font-size: 12px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; background: white; cursor: pointer; font-family: inherit; color: var(--text); }
 
-  /* Formulario añadir */
+  /* PAGINACIÓN */
+  .pagination { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--gray-l); }
+  .pagination-info { font-size: 13px; color: var(--text-muted); }
+  .pagination-controls { display: flex; gap: 4px; align-items: center; }
+  .page-btn { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 6px; background: white; cursor: pointer; font-size: 13px; font-family: inherit; color: var(--text); display: flex; align-items: center; justify-content: center; transition: all .15s; }
+  .page-btn:hover { background: var(--navy); color: white; border-color: var(--navy); }
+  .page-btn.active { background: var(--navy); color: white; border-color: var(--navy); font-weight: 600; }
+  .page-btn:disabled { opacity: .35; cursor: not-allowed; }
+  .page-btn:disabled:hover { background: white; color: var(--text); border-color: var(--border); }
+  .page-size-sel { font-size: 12px; padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; background: white; font-family: inherit; }
+
+  /* RECIENTES badge */
+  .badge-new { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 20px; background: var(--teal); color: white; margin-left: 6px; vertical-align: middle; }
+
+  /* FORM AÑADIR */
   .add-form { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 1.25rem; margin-top: 1rem; }
   .add-form-title { font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 1rem; }
   .add-form-grid { display: grid; grid-template-columns: 130px 1fr 1fr 160px 100px 80px 100px 1fr; gap: 8px; align-items: end; }
@@ -88,11 +93,11 @@
   .btn-danger:hover { color: var(--red-d); background: var(--red-l); }
   .form-actions { display: flex; justify-content: flex-end; margin-top: 1rem; }
 
-  /* Estado General */
+  /* ESTADO GENERAL */
   .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
   .metric-card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; }
   .metric-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
-  .metric-value { font-size: 22px; font-weight: 700; color: var(--text); }
+  .metric-value { font-size: 22px; font-weight: 700; }
   .metric-value.green { color: var(--green-d); }
   .metric-value.red { color: var(--red-d); }
   .metric-value.amber { color: var(--orange-d); }
@@ -113,28 +118,26 @@
   .detail-val.red { color: var(--red-d); }
   .detail-val.amber { color: var(--orange-d); }
 
-  /* Caja input */
   .caja-bar { background: var(--yellow); border: 1px solid #f0d060; border-radius: 10px; padding: 1rem 1.25rem; display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
   .caja-bar label { font-size: 13px; font-weight: 600; color: #7a6000; white-space: nowrap; }
   .caja-bar input { border: 1px solid #dbb800; border-radius: 6px; padding: 8px 12px; font-size: 16px; font-weight: 700; background: white; color: var(--text); width: 160px; font-family: inherit; }
   .caja-bar input:focus { outline: none; border-color: var(--teal); }
   .caja-bar .hint { font-size: 12px; color: #9a7a00; }
 
-  /* Loading */
   .loading { text-align: center; padding: 3rem; color: var(--text-muted); font-size: 14px; }
   .spinner { width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--teal); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 1rem; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Toast */
   .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--navy); color: white; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; z-index: 999; transform: translateY(100px); opacity: 0; transition: all .3s; }
   .toast.show { transform: translateY(0); opacity: 1; }
   .toast.error { background: var(--red-d); }
 
-  @media (max-width: 768px) {
+  @media (max-width: 900px) {
     .content { padding: 1rem; }
     .add-form-grid { grid-template-columns: 1fr 1fr; }
     .detail-grid { grid-template-columns: 1fr; }
     .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+    .filters-bar { flex-direction: column; align-items: stretch; }
   }
 </style>
 </head>
@@ -148,24 +151,81 @@
 </div>
 
 <div class="tabs">
-  <button class="tab active" onclick="showTab('movimientos', this)">Movimientos</button>
-  <button class="tab" onclick="showTab('estado', this)">Estado General</button>
+  <button class="tab active" onclick="showTab('movimientos',this)">Movimientos</button>
+  <button class="tab" onclick="showTab('estado',this)">Estado General</button>
 </div>
 
 <div class="content">
 
   <!-- MOVIMIENTOS -->
   <div id="movimientos" class="panel active">
+
+    <!-- FILTROS -->
+    <div class="filters-bar">
+      <div class="filter-group">
+        <label>Tipo</label>
+        <select id="fTipo" onchange="applyFilters()">
+          <option value="">Todos</option>
+          <option>INGRESO COMISIÓN</option>
+          <option>INGRESO SERVICIO</option>
+          <option>GASTO</option>
+          <option>FINANCIACIÓN</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Mes</label>
+        <select id="fMes" onchange="applyFilters()">
+          <option value="">Todos los meses</option>
+          <option value="01">Enero</option>
+          <option value="02">Febrero</option>
+          <option value="03">Marzo</option>
+          <option value="04">Abril</option>
+          <option value="05">Mayo</option>
+          <option value="06">Junio</option>
+          <option value="07">Julio</option>
+          <option value="08">Agosto</option>
+          <option value="09">Septiembre</option>
+          <option value="10">Octubre</option>
+          <option value="11">Noviembre</option>
+          <option value="12">Diciembre</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Desde</label>
+        <input type="date" id="fDesde" onchange="applyFilters()">
+      </div>
+      <div class="filter-group">
+        <label>Hasta</label>
+        <input type="date" id="fHasta" onchange="applyFilters()">
+      </div>
+      <div class="filter-group">
+        <label>Socio / Concepto</label>
+        <input type="text" id="fTexto" placeholder="Ej: Socio A, Agencia..." oninput="applyFilters()">
+      </div>
+      <button class="btn-reset" onclick="resetFilters()">✕ Limpiar filtros</button>
+      <span class="filter-count" id="filter-count"></span>
+    </div>
+
     <div class="table-card">
       <div class="table-toolbar">
         <span class="table-title">Registro de movimientos</span>
-        <span style="font-size:12px;color:var(--text-muted)" id="count-label"></span>
+        <div style="display:flex;align-items:center;gap:12px">
+          <label style="font-size:12px;color:var(--text-muted)">Filas por página:
+            <select class="page-size-sel" id="pageSizeSel" onchange="changePageSize(this.value)">
+              <option value="10">10</option>
+              <option value="20" selected>20</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </label>
+          <span style="font-size:12px;color:var(--text-muted)" id="count-label"></span>
+        </div>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Fecha</th>
+              <th class="sortable" onclick="sortBy('fecha')">Fecha <span id="sort-fecha">↓</span></th>
               <th>Concepto</th>
               <th>Categoría</th>
               <th>Tipo</th>
@@ -181,10 +241,12 @@
           </tbody>
         </table>
       </div>
+      <div class="pagination" id="pagination"></div>
     </div>
 
+    <!-- FORM AÑADIR -->
     <div class="add-form">
-      <div class="add-form-title">Añadir movimiento</div>
+      <div class="add-form-title">+ Añadir movimiento</div>
       <div class="add-form-grid">
         <div class="field"><label>Fecha</label><input type="date" id="nFecha"></div>
         <div class="field"><label>Concepto</label><input type="text" id="nConcepto" placeholder="Ej: Socio A, Agencia..."></div>
@@ -217,11 +279,7 @@
       <input type="number" id="cajaInput" value="0" step="0.01" oninput="renderEstado()">
       <span class="hint">Actualiza este valor manualmente con el saldo real de tu banco</span>
     </div>
-
-    <div class="metrics-grid" id="metrics-grid">
-      <div class="loading"><div class="spinner"></div></div>
-    </div>
-
+    <div class="metrics-grid" id="metrics-grid"><div class="loading"><div class="spinner"></div></div></div>
     <div class="detail-grid" id="detail-grid"></div>
   </div>
 
@@ -235,78 +293,195 @@ const SUPABASE_KEY = 'sb_publishable_pxoJRN-nOu90HAmiUxba_w_xf2u2KBB';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allRows = [];
+let filteredRows = [];
+let currentPage = 1;
+let pageSize = 20;
+let sortField = 'fecha';
+let sortAsc = false; // más recientes primero por defecto
 
 const TIPOS = {
-  'INGRESO COMISIÓN': { cls: 'tipo-ingreso-comision', badge: 'badge-com' },
-  'INGRESO SERVICIO': { cls: 'tipo-ingreso-servicio', badge: 'badge-serv' },
-  'GASTO':            { cls: 'tipo-gasto',            badge: 'badge-gasto' },
-  'FINANCIACIÓN':     { cls: 'tipo-financiacion',     badge: 'badge-fin' },
+  'INGRESO COMISIÓN': { cls: 'tipo-ingreso-comision' },
+  'INGRESO SERVICIO': { cls: 'tipo-ingreso-servicio' },
+  'GASTO':            { cls: 'tipo-gasto' },
+  'FINANCIACIÓN':     { cls: 'tipo-financiacion' },
 };
 
 function fmt(n) {
-  return Number(n || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  return Number(n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
 }
 function fmtDate(d) {
   if (!d) return '—';
-  const [y, m, dd] = d.split('-');
+  const [y,m,dd] = d.split('-');
   return `${dd}/${m}/${y}`;
 }
+function isRecent(fecha) {
+  if (!fecha) return false;
+  const d = new Date(fecha);
+  const now = new Date();
+  const diff = (now - d) / (1000*60*60*24);
+  return diff <= 7;
+}
 
-function showToast(msg, error = false) {
+function showToast(msg, error=false) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.className = 'toast show' + (error ? ' error' : '');
-  setTimeout(() => t.className = 'toast', 3000);
+  t.className = 'toast show' + (error?' error':'');
+  setTimeout(()=>t.className='toast', 3000);
 }
 
 async function loadData() {
-  const { data, error } = await sb.from('movimientos').select('*').order('fecha', { ascending: true });
+  const {data, error} = await sb.from('movimientos').select('*').order('fecha', {ascending: false}).order('created_at', {ascending: false});
   if (error) { showToast('Error cargando datos', true); return; }
   allRows = data || [];
-  renderTable();
+  applyFilters();
   renderEstado();
+}
+
+function applyFilters() {
+  const tipo   = document.getElementById('fTipo').value;
+  const mes    = document.getElementById('fMes').value;
+  const desde  = document.getElementById('fDesde').value;
+  const hasta  = document.getElementById('fHasta').value;
+  const texto  = document.getElementById('fTexto').value.toLowerCase().trim();
+
+  filteredRows = allRows.filter(r => {
+    if (tipo && r.tipo !== tipo) return false;
+    if (mes && r.fecha && !r.fecha.startsWith(`${r.fecha.slice(0,4)}-${mes}`)) return false;
+    if (desde && r.fecha < desde) return false;
+    if (hasta && r.fecha > hasta) return false;
+    if (texto && !(`${r.concepto} ${r.categoria} ${r.observaciones}`).toLowerCase().includes(texto)) return false;
+    return true;
+  });
+
+  // Aplicar ordenación
+  filteredRows.sort((a,b) => {
+    let va = a[sortField] || '';
+    let vb = b[sortField] || '';
+    if (va < vb) return sortAsc ? -1 : 1;
+    if (va > vb) return sortAsc ? 1 : -1;
+    return 0;
+  });
+
+  const active = [tipo, mes, desde, hasta, texto].filter(Boolean).length;
+  document.getElementById('filter-count').textContent = active > 0
+    ? `${filteredRows.length} resultado${filteredRows.length!==1?'s':''} filtrado${filteredRows.length!==1?'s':''}`
+    : '';
+
+  currentPage = 1;
+  renderTable();
+}
+
+function resetFilters() {
+  ['fTipo','fMes','fDesde','fHasta','fTexto'].forEach(id => {
+    const el = document.getElementById(id);
+    el.value = '';
+  });
+  applyFilters();
+}
+
+function sortBy(field) {
+  if (sortField === field) {
+    sortAsc = !sortAsc;
+  } else {
+    sortField = field;
+    sortAsc = false;
+  }
+  document.getElementById('sort-fecha').textContent = sortAsc ? '↑' : '↓';
+  applyFilters();
+}
+
+function changePageSize(val) {
+  pageSize = parseInt(val);
+  currentPage = 1;
+  renderTable();
 }
 
 function renderTable() {
   const tb = document.getElementById('tbody');
-  document.getElementById('count-label').textContent = `${allRows.length} movimiento${allRows.length !== 1 ? 's' : ''}`;
+  const total = filteredRows.length;
+  const totalPages = Math.ceil(total / pageSize);
+  const start = (currentPage - 1) * pageSize;
+  const end = Math.min(start + pageSize, total);
+  const pageRows = filteredRows.slice(start, end);
 
-  if (allRows.length === 0) {
-    tb.innerHTML = '<tr><td colspan="9" class="empty-state">Sin movimientos. Añade el primero abajo.</td></tr>';
+  document.getElementById('count-label').textContent =
+    total > 0 ? `Mostrando ${start+1}–${end} de ${total}` : '0 movimientos';
+
+  if (pageRows.length === 0) {
+    tb.innerHTML = '<tr><td colspan="9" class="empty-state">Sin movimientos. Prueba a cambiar los filtros.</td></tr>';
+    document.getElementById('pagination').innerHTML = '';
     return;
   }
 
-  tb.innerHTML = allRows.map((r, i) => {
-    const t = TIPOS[r.tipo] || { cls: '', badge: '' };
+  tb.innerHTML = pageRows.map(r => {
+    const t = TIPOS[r.tipo] || {cls:''};
+    const recent = isRecent(r.fecha);
     return `
       <tr class="${t.cls}">
-        <td style="white-space:nowrap;font-weight:500">${fmtDate(r.fecha)}</td>
-        <td style="font-weight:500">${r.concepto || '—'}</td>
-        <td style="color:var(--text-muted);font-size:12px">${r.categoria || '—'}</td>
+        <td style="white-space:nowrap;font-weight:500">
+          ${fmtDate(r.fecha)}
+          ${recent ? '<span class="badge-new">Nuevo</span>' : ''}
+        </td>
+        <td style="font-weight:500">${r.concepto||'—'}</td>
+        <td style="color:var(--text-muted);font-size:12px">${r.categoria||'—'}</td>
         <td>
-          <select class="tipo-sel" onchange="updateTipo('${r.id}', this.value)">
+          <select class="tipo-sel" onchange="updateTipo('${r.id}',this.value)">
             <option value="">—</option>
-            ${Object.keys(TIPOS).map(k => `<option${k === r.tipo ? ' selected' : ''}>${k}</option>`).join('')}
+            ${Object.keys(TIPOS).map(k=>`<option${k===r.tipo?' selected':''}>${k}</option>`).join('')}
           </select>
         </td>
         <td style="text-align:right;font-variant-numeric:tabular-nums">${fmt(r.base)}</td>
-        <td style="text-align:right;font-variant-numeric:tabular-nums;color:var(--text-muted)">${r.iva > 0 ? fmt(r.iva) : '—'}</td>
+        <td style="text-align:right;font-variant-numeric:tabular-nums;color:var(--text-muted)">${r.iva>0?fmt(r.iva):'—'}</td>
         <td style="text-align:right;font-weight:700;font-variant-numeric:tabular-nums">${fmt(r.total)}</td>
-        <td style="color:var(--text-muted);font-size:12px;max-width:200px">${r.observaciones || ''}</td>
+        <td style="color:var(--text-muted);font-size:12px;max-width:200px">${r.observaciones||''}</td>
         <td><button class="btn-danger" onclick="deleteRow('${r.id}')" title="Eliminar">🗑</button></td>
       </tr>`;
   }).join('');
+
+  // Paginación
+  if (totalPages <= 1) {
+    document.getElementById('pagination').innerHTML = '';
+    return;
+  }
+
+  let pages = '';
+  const maxBtns = 5;
+  let startP = Math.max(1, currentPage - 2);
+  let endP = Math.min(totalPages, startP + maxBtns - 1);
+  if (endP - startP < maxBtns - 1) startP = Math.max(1, endP - maxBtns + 1);
+
+  if (startP > 1) pages += `<button class="page-btn" onclick="goPage(1)">1</button>${startP>2?'<span style="padding:0 4px;color:var(--text-muted)">…</span>':''}`;
+  for (let i=startP; i<=endP; i++) {
+    pages += `<button class="page-btn${i===currentPage?' active':''}" onclick="goPage(${i})">${i}</button>`;
+  }
+  if (endP < totalPages) pages += `${endP<totalPages-1?'<span style="padding:0 4px;color:var(--text-muted)">…</span>':''}<button class="page-btn" onclick="goPage(${totalPages})">${totalPages}</button>`;
+
+  document.getElementById('pagination').innerHTML = `
+    <span class="pagination-info">Página ${currentPage} de ${totalPages}</span>
+    <div class="pagination-controls">
+      <button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>
+      ${pages}
+      <button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>›</button>
+    </div>`;
+}
+
+function goPage(p) {
+  const totalPages = Math.ceil(filteredRows.length / pageSize);
+  if (p < 1 || p > totalPages) return;
+  currentPage = p;
+  renderTable();
+  window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
 async function updateTipo(id, tipo) {
-  const { error } = await sb.from('movimientos').update({ tipo }).eq('id', id);
+  const {error} = await sb.from('movimientos').update({tipo}).eq('id', id);
   if (error) { showToast('Error actualizando tipo', true); return; }
   await loadData();
 }
 
 async function deleteRow(id) {
   if (!confirm('¿Eliminar este movimiento?')) return;
-  const { error } = await sb.from('movimientos').delete().eq('id', id);
+  const {error} = await sb.from('movimientos').delete().eq('id', id);
   if (error) { showToast('Error eliminando', true); return; }
   showToast('Movimiento eliminado');
   await loadData();
@@ -314,77 +489,62 @@ async function deleteRow(id) {
 
 async function addRow() {
   const g = id => document.getElementById(id).value;
-  const fecha = g('nFecha');
-  const tipo = g('nTipo');
+  const fecha = g('nFecha'), tipo = g('nTipo');
   if (!fecha || !tipo) { showToast('Fecha y Tipo son obligatorios', true); return; }
-
-  const base = parseFloat(g('nBase')) || 0;
-  const iva = parseFloat(g('nIva')) || 0;
-  const total = parseFloat(g('nTotal')) || base + iva;
-
+  const base = parseFloat(g('nBase'))||0;
+  const iva  = parseFloat(g('nIva'))||0;
+  const total = parseFloat(g('nTotal'))||base+iva;
   const btn = document.getElementById('btn-add');
-  btn.disabled = true;
-  btn.textContent = 'Guardando...';
-
-  const { error } = await sb.from('movimientos').insert([{
-    fecha, concepto: g('nConcepto'), categoria: g('nCategoria'),
-    tipo, base, iva, total, observaciones: g('nObs')
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  const {error} = await sb.from('movimientos').insert([{
+    fecha, concepto:g('nConcepto'), categoria:g('nCategoria'),
+    tipo, base, iva, total, observaciones:g('nObs')
   }]);
-
-  btn.disabled = false;
-  btn.textContent = '+ Añadir movimiento';
-
+  btn.disabled = false; btn.textContent = '+ Añadir movimiento';
   if (error) { showToast('Error guardando', true); return; }
-
-  ['nFecha','nConcepto','nCategoria','nBase','nIva','nTotal','nObs'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('nTipo').value = '';
+  ['nFecha','nConcepto','nCategoria','nBase','nIva','nTotal','nObs'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('nTipo').value='';
   showToast('Movimiento añadido ✓');
   await loadData();
 }
 
 function calcStats() {
-  let ingresosCom = 0, ingresosServ = 0, gastos = 0, fin = 0;
-  let nCom = 0, nServ = 0, nGastos = 0;
-  const socioMap = {};
-
-  allRows.forEach(r => {
-    if (r.tipo === 'INGRESO COMISIÓN') { ingresosCom += +r.total; nCom++; }
-    else if (r.tipo === 'INGRESO SERVICIO') { ingresosServ += +r.total; nServ++; }
-    else if (r.tipo === 'GASTO') { gastos += +r.total; nGastos++; }
-    else if (r.tipo === 'FINANCIACIÓN') {
-      fin += +r.total;
-      socioMap[r.concepto] = (socioMap[r.concepto] || 0) + +r.total;
-    }
+  let ingresosCom=0, ingresosServ=0, gastos=0, fin=0, nCom=0, nServ=0, nGastos=0;
+  const socioMap={};
+  allRows.forEach(r=>{
+    if (r.tipo==='INGRESO COMISIÓN'){ingresosCom+=+r.total;nCom++;}
+    else if(r.tipo==='INGRESO SERVICIO'){ingresosServ+=+r.total;nServ++;}
+    else if(r.tipo==='GASTO'){gastos+=+r.total;nGastos++;}
+    else if(r.tipo==='FINANCIACIÓN'){fin+=+r.total;socioMap[r.concepto]=(socioMap[r.concepto]||0)+ +r.total;}
   });
-
-  return { ingresosCom, ingresosServ, gastos, fin, nCom, nServ, nGastos, socioMap,
-    totalIngresos: ingresosCom + ingresosServ,
-    resultado: ingresosCom + ingresosServ - gastos };
+  return {ingresosCom,ingresosServ,gastos,fin,nCom,nServ,nGastos,socioMap,
+    totalIngresos:ingresosCom+ingresosServ,
+    resultado:ingresosCom+ingresosServ-gastos};
 }
 
 function renderEstado() {
   const s = calcStats();
-  const caja = parseFloat(document.getElementById('cajaInput')?.value) || 0;
-  const gmv = s.nCom * 4500;
-  const takeRate = gmv > 0 ? ((s.ingresosCom / gmv) * 100).toFixed(1) + '%' : '—';
+  const caja = parseFloat(document.getElementById('cajaInput')?.value)||0;
+  const gmv = s.nCom*4500;
+  const takeRate = gmv>0?((s.ingresosCom/gmv)*100).toFixed(1)+'%':'—';
 
   document.getElementById('metrics-grid').innerHTML = [
-    { label: 'Total ingresos', value: fmt(s.totalIngresos), cls: 'green' },
-    { label: 'Total gastos', value: fmt(s.gastos), cls: 'red' },
-    { label: 'Resultado neto', value: fmt(s.resultado), cls: s.resultado >= 0 ? 'green' : 'red' },
-    { label: 'Caja actual', value: fmt(caja), cls: 'navy' },
-    { label: 'Deuda socios', value: fmt(s.fin), cls: 'amber' },
-    { label: 'Comisiones cobradas', value: s.nCom + ' conv.', cls: '' },
-    { label: 'GMV generado', value: fmt(gmv), cls: '' },
-    { label: 'Take rate', value: takeRate, cls: '' },
-  ].map(m => `
+    {label:'Total ingresos',    value:fmt(s.totalIngresos), cls:'green'},
+    {label:'Total gastos',      value:fmt(s.gastos),        cls:'red'},
+    {label:'Resultado neto',    value:fmt(s.resultado),     cls:s.resultado>=0?'green':'red'},
+    {label:'Caja actual',       value:fmt(caja),            cls:'navy'},
+    {label:'Deuda socios',      value:fmt(s.fin),           cls:'amber'},
+    {label:'Comisiones cobradas',value:s.nCom+' conv.',     cls:''},
+    {label:'GMV generado',      value:fmt(gmv),             cls:''},
+    {label:'Take rate',         value:takeRate,             cls:''},
+  ].map(m=>`
     <div class="metric-card">
       <div class="metric-label">${m.label}</div>
       <div class="metric-value ${m.cls}">${m.value}</div>
     </div>`).join('');
 
   const socioRows = Object.entries(s.socioMap)
-    .map(([k, v]) => `<div class="detail-row"><span class="detail-lbl">→ ${k}</span><span class="detail-val amber">${fmt(v)}</span></div>`)
+    .map(([k,v])=>`<div class="detail-row"><span class="detail-lbl">→ ${k}</span><span class="detail-val amber">${fmt(v)}</span></div>`)
     .join('');
 
   document.getElementById('detail-grid').innerHTML = `
@@ -418,19 +578,18 @@ function renderEstado() {
 }
 
 function showTab(id, btn) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
-  if (id === 'estado') renderEstado();
+  if (id==='estado') renderEstado();
 }
 
-// Auto-calcular total al cambiar base o IVA
-['nBase', 'nIva'].forEach(id => {
-  document.getElementById(id).addEventListener('input', () => {
-    const b = parseFloat(document.getElementById('nBase').value) || 0;
-    const i = parseFloat(document.getElementById('nIva').value) || 0;
-    document.getElementById('nTotal').value = (b + i).toFixed(2);
+['nBase','nIva'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',()=>{
+    const b = parseFloat(document.getElementById('nBase').value)||0;
+    const i = parseFloat(document.getElementById('nIva').value)||0;
+    document.getElementById('nTotal').value = (b+i).toFixed(2);
   });
 });
 
