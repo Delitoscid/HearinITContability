@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HEARINIT — Contabilidad</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --navy: #1F3864;
+    --teal: #17A589;
+    --blue: #2E75B6;
+    --green-l: #D5F5E3;
+    --green-d: #1E8449;
+    --red-l: #FADBD8;
+    --red-d: #A32D2D;
+    --orange-l: #FDEBD0;
+    --orange-d: #854F0B;
+    --gray-l: #F5F5F5;
+    --gray-d: #888;
+    --yellow: #FFF9C4;
+    --white: #fff;
+    --border: #e0e0e0;
+    --text: #1a1a1a;
+    --text-muted: #666;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fa; color: var(--text); min-height: 100vh; }
+
+  /* Header */
+  .header { background: var(--navy); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+  .header-logo { color: white; font-size: 18px; font-weight: 700; letter-spacing: .5px; }
+  .header-logo span { color: var(--teal); }
+  .header-sub { color: rgba(255,255,255,.5); font-size: 12px; }
+
+  /* Tabs */
+  .tabs { background: white; border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; gap: 0; }
+  .tab { padding: 14px 20px; font-size: 14px; cursor: pointer; border: none; background: none; color: var(--text-muted); border-bottom: 2px solid transparent; transition: all .15s; font-weight: 500; }
+  .tab.active { color: var(--navy); border-bottom-color: var(--navy); }
+
+  /* Contenido */
+  .content { max-width: 1200px; margin: 0 auto; padding: 1.5rem 2rem; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Tabla */
+  .table-card { background: white; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+  .table-toolbar { padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+  .table-title { font-size: 15px; font-weight: 600; color: var(--navy); }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { background: var(--gray-l); padding: 10px 14px; text-align: left; font-weight: 600; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: filter .1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 10px 14px; vertical-align: middle; }
+  tbody tr:hover { filter: brightness(.97); }
+  tbody tr.empty-state td { text-align: center; padding: 3rem; color: var(--text-muted); font-size: 14px; }
+
+  /* Colores por tipo */
+  tr.tipo-ingreso-comision { background: var(--green-l); }
+  tr.tipo-ingreso-servicio { background: var(--green-l); }
+  tr.tipo-gasto { background: var(--red-l); }
+  tr.tipo-financiacion { background: var(--orange-l); }
+
+  /* Badge tipo */
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+  .badge-com { background: #c0dd97; color: #27500a; }
+  .badge-serv { background: #c0dd97; color: #27500a; }
+  .badge-gasto { background: #f7c1c1; color: #791f1f; }
+  .badge-fin { background: #fac775; color: #633806; }
+
+  /* Select tipo en tabla */
+  select.tipo-sel { font-size: 12px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; background: white; cursor: pointer; font-family: inherit; color: var(--text); }
+
+  /* Formulario añadir */
+  .add-form { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 1.25rem; margin-top: 1rem; }
+  .add-form-title { font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 1rem; }
+  .add-form-grid { display: grid; grid-template-columns: 130px 1fr 1fr 160px 100px 80px 100px 1fr; gap: 8px; align-items: end; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+  .field input, .field select { font-size: 13px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: white; color: var(--text); font-family: inherit; width: 100%; }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--teal); }
+  .btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit; transition: all .15s; }
+  .btn-primary { background: var(--navy); color: white; }
+  .btn-primary:hover { background: #2a4f8a; }
+  .btn-primary:disabled { background: var(--gray-d); cursor: not-allowed; }
+  .btn-danger { background: none; border: none; color: var(--gray-d); cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 6px; }
+  .btn-danger:hover { color: var(--red-d); background: var(--red-l); }
+  .form-actions { display: flex; justify-content: flex-end; margin-top: 1rem; }
+
+  /* Estado General */
+  .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .metric-card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; }
+  .metric-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .metric-value { font-size: 22px; font-weight: 700; color: var(--text); }
+  .metric-value.green { color: var(--green-d); }
+  .metric-value.red { color: var(--red-d); }
+  .metric-value.amber { color: var(--orange-d); }
+  .metric-value.navy { color: var(--navy); }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .detail-card { background: white; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .detail-card-title { padding: 12px 16px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: white; }
+  .detail-card-title.green { background: var(--green-d); }
+  .detail-card-title.red { background: var(--red-d); }
+  .detail-card-title.amber { background: var(--orange-d); }
+  .detail-card-title.navy { background: var(--navy); }
+  .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-lbl { color: var(--text-muted); }
+  .detail-val { font-weight: 600; }
+  .detail-val.green { color: var(--green-d); }
+  .detail-val.red { color: var(--red-d); }
+  .detail-val.amber { color: var(--orange-d); }
+
+  /* Caja input */
+  .caja-bar { background: var(--yellow); border: 1px solid #f0d060; border-radius: 10px; padding: 1rem 1.25rem; display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+  .caja-bar label { font-size: 13px; font-weight: 600; color: #7a6000; white-space: nowrap; }
+  .caja-bar input { border: 1px solid #dbb800; border-radius: 6px; padding: 8px 12px; font-size: 16px; font-weight: 700; background: white; color: var(--text); width: 160px; font-family: inherit; }
+  .caja-bar input:focus { outline: none; border-color: var(--teal); }
+  .caja-bar .hint { font-size: 12px; color: #9a7a00; }
+
+  /* Loading */
+  .loading { text-align: center; padding: 3rem; color: var(--text-muted); font-size: 14px; }
+  .spinner { width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--teal); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 1rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--navy); color: white; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; z-index: 999; transform: translateY(100px); opacity: 0; transition: all .3s; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.error { background: var(--red-d); }
+
+  @media (max-width: 768px) {
+    .content { padding: 1rem; }
+    .add-form-grid { grid-template-columns: 1fr 1fr; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-logo">HEAR<span>INIT</span></div>
+    <div class="header-sub">Panel de Contabilidad</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('movimientos', this)">Movimientos</button>
+  <button class="tab" onclick="showTab('estado', this)">Estado General</button>
+</div>
+
+<div class="content">
+
+  <!-- MOVIMIENTOS -->
+  <div id="movimientos" class="panel active">
+    <div class="table-card">
+      <div class="table-toolbar">
+        <span class="table-title">Registro de movimientos</span>
+        <span style="font-size:12px;color:var(--text-muted)" id="count-label"></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Concepto</th>
+              <th>Categoría</th>
+              <th>Tipo</th>
+              <th style="text-align:right">Base (€)</th>
+              <th style="text-align:right">IVA (€)</th>
+              <th style="text-align:right">Total (€)</th>
+              <th>Observaciones</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="9" class="empty-state"><div class="spinner"></div>Cargando datos...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="add-form">
+      <div class="add-form-title">Añadir movimiento</div>
+      <div class="add-form-grid">
+        <div class="field"><label>Fecha</label><input type="date" id="nFecha"></div>
+        <div class="field"><label>Concepto</label><input type="text" id="nConcepto" placeholder="Ej: Socio A, Agencia..."></div>
+        <div class="field"><label>Categoría</label><input type="text" id="nCategoria" placeholder="Ej: Préstamo Socio"></div>
+        <div class="field">
+          <label>Tipo</label>
+          <select id="nTipo">
+            <option value="">— Selecciona —</option>
+            <option>INGRESO COMISIÓN</option>
+            <option>INGRESO SERVICIO</option>
+            <option>GASTO</option>
+            <option>FINANCIACIÓN</option>
+          </select>
+        </div>
+        <div class="field"><label>Base (€)</label><input type="number" id="nBase" placeholder="0.00" step="0.01"></div>
+        <div class="field"><label>IVA (€)</label><input type="number" id="nIva" placeholder="0.00" step="0.01"></div>
+        <div class="field"><label>Total (€)</label><input type="number" id="nTotal" placeholder="0.00" step="0.01"></div>
+        <div class="field"><label>Observaciones</label><input type="text" id="nObs" placeholder="Notas opcionales"></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="addRow()" id="btn-add">+ Añadir movimiento</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESTADO GENERAL -->
+  <div id="estado" class="panel">
+    <div class="caja-bar">
+      <label>💳 Saldo en cuenta hoy (€)</label>
+      <input type="number" id="cajaInput" value="0" step="0.01" oninput="renderEstado()">
+      <span class="hint">Actualiza este valor manualmente con el saldo real de tu banco</span>
+    </div>
+
+    <div class="metrics-grid" id="metrics-grid">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+
+    <div class="detail-grid" id="detail-grid"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://gmdptwcypgoaydhqdium.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_pxoJRN-nOu90HAmiUxba_w_xf2u2KBB';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let allRows = [];
+
+const TIPOS = {
+  'INGRESO COMISIÓN': { cls: 'tipo-ingreso-comision', badge: 'badge-com' },
+  'INGRESO SERVICIO': { cls: 'tipo-ingreso-servicio', badge: 'badge-serv' },
+  'GASTO':            { cls: 'tipo-gasto',            badge: 'badge-gasto' },
+  'FINANCIACIÓN':     { cls: 'tipo-financiacion',     badge: 'badge-fin' },
+};
+
+function fmt(n) {
+  return Number(n || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  const [y, m, dd] = d.split('-');
+  return `${dd}/${m}/${y}`;
+}
+
+function showToast(msg, error = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (error ? ' error' : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+async function loadData() {
+  const { data, error } = await sb.from('movimientos').select('*').order('fecha', { ascending: true });
+  if (error) { showToast('Error cargando datos', true); return; }
+  allRows = data || [];
+  renderTable();
+  renderEstado();
+}
+
+function renderTable() {
+  const tb = document.getElementById('tbody');
+  document.getElementById('count-label').textContent = `${allRows.length} movimiento${allRows.length !== 1 ? 's' : ''}`;
+
+  if (allRows.length === 0) {
+    tb.innerHTML = '<tr><td colspan="9" class="empty-state">Sin movimientos. Añade el primero abajo.</td></tr>';
+    return;
+  }
+
+  tb.innerHTML = allRows.map((r, i) => {
+    const t = TIPOS[r.tipo] || { cls: '', badge: '' };
+    return `
+      <tr class="${t.cls}">
+        <td style="white-space:nowrap;font-weight:500">${fmtDate(r.fecha)}</td>
+        <td style="font-weight:500">${r.concepto || '—'}</td>
+        <td style="color:var(--text-muted);font-size:12px">${r.categoria || '—'}</td>
+        <td>
+          <select class="tipo-sel" onchange="updateTipo('${r.id}', this.value)">
+            <option value="">—</option>
+            ${Object.keys(TIPOS).map(k => `<option${k === r.tipo ? ' selected' : ''}>${k}</option>`).join('')}
+          </select>
+        </td>
+        <td style="text-align:right;font-variant-numeric:tabular-nums">${fmt(r.base)}</td>
+        <td style="text-align:right;font-variant-numeric:tabular-nums;color:var(--text-muted)">${r.iva > 0 ? fmt(r.iva) : '—'}</td>
+        <td style="text-align:right;font-weight:700;font-variant-numeric:tabular-nums">${fmt(r.total)}</td>
+        <td style="color:var(--text-muted);font-size:12px;max-width:200px">${r.observaciones || ''}</td>
+        <td><button class="btn-danger" onclick="deleteRow('${r.id}')" title="Eliminar">🗑</button></td>
+      </tr>`;
+  }).join('');
+}
+
+async function updateTipo(id, tipo) {
+  const { error } = await sb.from('movimientos').update({ tipo }).eq('id', id);
+  if (error) { showToast('Error actualizando tipo', true); return; }
+  await loadData();
+}
+
+async function deleteRow(id) {
+  if (!confirm('¿Eliminar este movimiento?')) return;
+  const { error } = await sb.from('movimientos').delete().eq('id', id);
+  if (error) { showToast('Error eliminando', true); return; }
+  showToast('Movimiento eliminado');
+  await loadData();
+}
+
+async function addRow() {
+  const g = id => document.getElementById(id).value;
+  const fecha = g('nFecha');
+  const tipo = g('nTipo');
+  if (!fecha || !tipo) { showToast('Fecha y Tipo son obligatorios', true); return; }
+
+  const base = parseFloat(g('nBase')) || 0;
+  const iva = parseFloat(g('nIva')) || 0;
+  const total = parseFloat(g('nTotal')) || base + iva;
+
+  const btn = document.getElementById('btn-add');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  const { error } = await sb.from('movimientos').insert([{
+    fecha, concepto: g('nConcepto'), categoria: g('nCategoria'),
+    tipo, base, iva, total, observaciones: g('nObs')
+  }]);
+
+  btn.disabled = false;
+  btn.textContent = '+ Añadir movimiento';
+
+  if (error) { showToast('Error guardando', true); return; }
+
+  ['nFecha','nConcepto','nCategoria','nBase','nIva','nTotal','nObs'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('nTipo').value = '';
+  showToast('Movimiento añadido ✓');
+  await loadData();
+}
+
+function calcStats() {
+  let ingresosCom = 0, ingresosServ = 0, gastos = 0, fin = 0;
+  let nCom = 0, nServ = 0, nGastos = 0;
+  const socioMap = {};
+
+  allRows.forEach(r => {
+    if (r.tipo === 'INGRESO COMISIÓN') { ingresosCom += +r.total; nCom++; }
+    else if (r.tipo === 'INGRESO SERVICIO') { ingresosServ += +r.total; nServ++; }
+    else if (r.tipo === 'GASTO') { gastos += +r.total; nGastos++; }
+    else if (r.tipo === 'FINANCIACIÓN') {
+      fin += +r.total;
+      socioMap[r.concepto] = (socioMap[r.concepto] || 0) + +r.total;
+    }
+  });
+
+  return { ingresosCom, ingresosServ, gastos, fin, nCom, nServ, nGastos, socioMap,
+    totalIngresos: ingresosCom + ingresosServ,
+    resultado: ingresosCom + ingresosServ - gastos };
+}
+
+function renderEstado() {
+  const s = calcStats();
+  const caja = parseFloat(document.getElementById('cajaInput')?.value) || 0;
+  const gmv = s.nCom * 4500;
+  const takeRate = gmv > 0 ? ((s.ingresosCom / gmv) * 100).toFixed(1) + '%' : '—';
+
+  document.getElementById('metrics-grid').innerHTML = [
+    { label: 'Total ingresos', value: fmt(s.totalIngresos), cls: 'green' },
+    { label: 'Total gastos', value: fmt(s.gastos), cls: 'red' },
+    { label: 'Resultado neto', value: fmt(s.resultado), cls: s.resultado >= 0 ? 'green' : 'red' },
+    { label: 'Caja actual', value: fmt(caja), cls: 'navy' },
+    { label: 'Deuda socios', value: fmt(s.fin), cls: 'amber' },
+    { label: 'Comisiones cobradas', value: s.nCom + ' conv.', cls: '' },
+    { label: 'GMV generado', value: fmt(gmv), cls: '' },
+    { label: 'Take rate', value: takeRate, cls: '' },
+  ].map(m => `
+    <div class="metric-card">
+      <div class="metric-label">${m.label}</div>
+      <div class="metric-value ${m.cls}">${m.value}</div>
+    </div>`).join('');
+
+  const socioRows = Object.entries(s.socioMap)
+    .map(([k, v]) => `<div class="detail-row"><span class="detail-lbl">→ ${k}</span><span class="detail-val amber">${fmt(v)}</span></div>`)
+    .join('');
+
+  document.getElementById('detail-grid').innerHTML = `
+    <div>
+      <div class="detail-card">
+        <div class="detail-card-title green">Ingresos</div>
+        <div class="detail-row"><span class="detail-lbl">Comisiones marketplace</span><span class="detail-val green">${fmt(s.ingresosCom)}</span></div>
+        <div class="detail-row"><span class="detail-lbl">Servicios web (${s.nServ})</span><span class="detail-val green">${fmt(s.ingresosServ)}</span></div>
+        <div class="detail-row"><span class="detail-lbl"><strong>TOTAL INGRESOS</strong></span><span class="detail-val green"><strong>${fmt(s.totalIngresos)}</strong></span></div>
+      </div>
+      <div class="detail-card" style="margin-top:1rem">
+        <div class="detail-card-title red">Gastos</div>
+        <div class="detail-row"><span class="detail-lbl">Total gastado con IVA</span><span class="detail-val red">${fmt(s.gastos)}</span></div>
+        <div class="detail-row"><span class="detail-lbl">Nº facturas registradas</span><span class="detail-val">${s.nGastos}</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="detail-card">
+        <div class="detail-card-title amber">Financiación socios</div>
+        ${socioRows}
+        <div class="detail-row"><span class="detail-lbl"><strong>TOTAL a devolver</strong></span><span class="detail-val amber"><strong>${fmt(s.fin)}</strong></span></div>
+      </div>
+      <div class="detail-card" style="margin-top:1rem">
+        <div class="detail-card-title navy">Métricas clave</div>
+        <div class="detail-row"><span class="detail-lbl">GMV generado</span><span class="detail-val">${fmt(gmv)}</span></div>
+        <div class="detail-row"><span class="detail-lbl">Take rate efectivo</span><span class="detail-val">${takeRate}</span></div>
+        <div class="detail-row"><span class="detail-lbl">Conversiones cobradas</span><span class="detail-val">${s.nCom}</span></div>
+        <div class="detail-row"><span class="detail-lbl">Proyectos web</span><span class="detail-val">${s.nServ}</span></div>
+      </div>
+    </div>`;
+}
+
+function showTab(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'estado') renderEstado();
+}
+
+// Auto-calcular total al cambiar base o IVA
+['nBase', 'nIva'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    const b = parseFloat(document.getElementById('nBase').value) || 0;
+    const i = parseFloat(document.getElementById('nIva').value) || 0;
+    document.getElementById('nTotal').value = (b + i).toFixed(2);
+  });
+});
+
+loadData();
+</script>
+</body>
+</html>
